@@ -1,21 +1,20 @@
-﻿using System;
-using View = Client.Models.ToDoItems;
+using System;
 using Model = Models.ToDoItems;
+using View = Client.Models.ToDoItems;
 
 namespace Converters
 {
-    public class ToDoItemConverter
+    public class ToDoItemPatchInfoConverter
     {
-        public static Model.TodoItem Convert(View.TodoItem viewItem)
+        public static Model.ToDoItemPatchInfo Convert(View.ToDoItemPatchInfo viewItem)
         {
             if (viewItem == null)
             {
                 throw new ArgumentNullException(nameof(viewItem));
             }
 
-            var modelItem = new Model.TodoItem()
+            var modelItem = new Model.ToDoItemPatchInfo()
             {
-                Id = Guid.Parse( viewItem.Id),
                 Name = viewItem.Name,
                 IsComplete = viewItem.IsComplete
             };

@@ -10,7 +10,7 @@ using ToDoAPI.Errors;
 using Database = Models.DataBase;
 using Model = Models.ToDoItems;
 using View = Client.Models.ToDoItems;
-using Converter = Converters.ToDoItemConverter;
+using Converter = Converters;
 
 namespace ToDoAPI.Controllers
 {
@@ -58,19 +58,36 @@ namespace ToDoAPI.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<Model.TodoItem>> PostTodoItem([FromBody] Model.TodoItem item)
+        public async Task<ActionResult<Model.TodoItem>> PostTodoItem([FromBody] View.ToDoItemBuildInfo item)
         {
-            context.TodoItems.Add(item);
+            var modelBuildInfo = Converter.ToDoItemBuildInfoConverter.Convert(item);
+            var modelItem = new Model.TodoItem
+            {
+                Name = modelBuildInfo.Name,
+                IsComplete = modelBuildInfo.IsComplete
+            };
+            context.TodoItems.Add(modelItem);
             await context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetTodoItem), new {id = item.Id}, item);
+            return CreatedAtAction(nameof(GetTodoItem), new {id = modelItem.Id}, modelItem);
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutTodoItem(Guid? id, [FromBody] View.TodoItem item)
+        public async Task<IActionResult> PutTodoItem(Guid? id, [FromBody] View.ToDoItemPatchInfo item)
         {
-            var modelItem = Converter.ConvertViewToModel(item);
-            
+            if (id == null)
+            {
+                throw new ArgumentNullException(nameof(id));
+            }
+
+            var modelPatchInfo = Converter.ToDoItemPatchInfoConverter.Convert(item);
+            var modelItem = new Model.TodoItem
+            {
+                Id = id.Value,
+                Name = modelPatchInfo.Name,
+                IsComplete = modelPatchInfo.IsComplete
+            };
+
             if (id != modelItem.Id)
             {
                 var error = ServiceErrorResponses.ItemNotFound(id.ToString());
@@ -82,7 +99,7 @@ namespace ToDoAPI.Controllers
 
             return NoContent();
         }
-        
+
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteTodoItem(Guid id)
         {
